@@ -2,12 +2,11 @@ import React from 'react';
 import miloLogo from './assets/milo-brand.png';
 
 function App() {
-  // --- PALETA DE COLORES EXTRAÍDA DEL LOGO ---
   const brandPalette = {
-    red: '#E31B23',        // Rojo Milo
-    cream: '#F9F1E2',      // Fondo Crema Milo
-    white: '#FFFFFF',      // Blanco para contraste
-    darkText: '#1A1A1A'    // Texto oscuro
+    red: '#E31B23',
+    cream: '#F9F1E2',
+    white: '#FFFFFF',
+    darkText: '#1A1A1A'
   };
 
   const styles = {
@@ -17,68 +16,71 @@ function App() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '0', // Eliminamos el padding para evitar franjas laterales
+      padding: '0',
+      margin: '0',
+      width: '100%',
+      overflowX: 'hidden',
       fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
     },
     splitCard: {
       display: 'flex',
       flexWrap: 'wrap',
       width: '100%',
-      maxWidth: '1200px', // Aumentamos el ancho máximo para reducir espacios laterales
+      // --- MODIFICA AQUÍ EL ANCHO ---
+      // '100%' elimina las franjas laterales. 
+      // Si quieres franjas pequeñas, usa '90%' o '95%'.
+      maxWidth: '100%', 
       backgroundColor: brandPalette.white,
-      boxShadow: '0 20px 40px rgba(0, 0, 0, 0.05)',
-      overflow: 'hidden',
-      borderRadius: '0' // En demos visuales, a veces el borde recto ayuda a ocupar mejor el ancho
+      minHeight: '80vh', // Para que cubra todo el alto también
+      overflow: 'hidden'
     },
-    // LADO IZQUIERDO: Imagen
     imageSide: {
-      flex: '1 1 600px', // Aumentamos la base de la imagen
-      minHeight: '600px',
+      flex: '1 1 500px',
+      minHeight: '500px',
       backgroundImage: `url(${miloLogo})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundColor: brandPalette.cream
     },
-    // LADO DERECHO: Contenido
     contentSide: {
-      flex: '1 1 400px',
-      padding: '60px',
+      flex: '1 1 300px',
+      padding: '5% 8%', // Espaciado porcentual para adaptarse al ancho
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'center',
       backgroundColor: brandPalette.white
     },
     title: {
-      fontSize: '3.5rem',
+      fontSize: '4rem',
       fontWeight: '900',
       color: brandPalette.red,
-      marginBottom: '20px',
-      letterSpacing: '-1.5px'
+      marginBottom: '24px',
+      letterSpacing: '-2px'
     },
     subtitle: {
-      fontSize: '1.25rem',
+      fontSize: '1.4rem',
       color: brandPalette.darkText,
-      marginBottom: '40px',
+      marginBottom: '48px',
       lineHeight: '1.6'
     },
     primaryButton: {
       backgroundColor: brandPalette.red,
       color: brandPalette.white,
       border: 'none',
-      padding: '20px 35px',
-      fontSize: '1.1rem',
+      padding: '22px 40px',
+      fontSize: '1.2rem',
       fontWeight: 'bold',
       borderRadius: '12px',
       cursor: 'pointer',
-      marginBottom: '15px',
-      transition: 'all 0.2s ease'
+      marginBottom: '16px',
+      transition: 'background 0.3s'
     },
     secondaryButton: {
       backgroundColor: 'transparent',
       color: brandPalette.red,
       border: `2px solid ${brandPalette.red}`,
-      padding: '18px 35px',
-      fontSize: '1.1rem',
+      padding: '20px 40px',
+      fontSize: '1.2rem',
       fontWeight: 'bold',
       borderRadius: '12px',
       cursor: 'pointer'
@@ -103,17 +105,11 @@ function App() {
             </p>
           </div>
           
-          <button 
-            style={styles.primaryButton}
-            onClick={() => alert('Iniciando registro')}
-          >
+          <button style={styles.primaryButton} onClick={() => alert('Registrar')}>
             Registrar mi Negocio
           </button>
           
-          <button 
-            style={styles.secondaryButton} 
-            onClick={() => alert('Acceso a Ad-Wallet')}
-          >
+          <button style={styles.secondaryButton} onClick={() => alert('Login')}>
             Ingresar a Ad-Wallet
           </button>
         </div>
