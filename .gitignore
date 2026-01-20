@@ -1,0 +1,14 @@
+# Entornos virtuales y Python
+backend/venv/
+backend/__pycache__/
+backend/.env
+*.pyc
+
+# Dependencias de Node (Frontend)
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+
+# Sistema y VS Code
+.vscode/
+.DS_Store
