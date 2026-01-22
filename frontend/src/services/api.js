@@ -99,31 +99,6 @@ export const api = {
     return respuestaBase;
   },
 
-  registrarUsuario: async (datos) => ({ success: true }),
-
-  // NUEVO: Ideas de texto
-  obtenerIdeas: async (rubro) => {
-    return [
-      "Publica una foto del 'detrás de cámaras' de tu producto estrella.",
-      "Crea una encuesta: ¿Qué sabor/color prefieren tus clientes para el viernes?",
-      "Comparte la historia de tu primer cliente satisfecho.",
-      "Haz un video rápido respondiendo la pregunta más frecuente que te hacen.",
-      "Oferta relámpago: 'Solo por las próximas 3 horas' en historias."
-    ];
-  },
-
-  // NUEVO: Trends (Simulación de TikToks/Reels)
-  obtenerTrends: async (rubro) => {
-    return [
-      { id: 1, platform: 'TikTok', title: 'Audio Viral: "Capybara"', views: '1.2M', desc: 'Usa este audio mostrando tus productos en fila.' },
-      { id: 2, platform: 'Instagram', title: 'Plantilla: "Mi día en 3 segundos"', views: '850k', desc: 'Cortes rápidos de tu proceso de trabajo.' },
-      { id: 3, platform: 'TikTok', title: 'Trend: "Pedro Pedro"', views: '2.5M', desc: 'Pon a tu producto girando con este audio.' }
-    ];
-  },
-  registrarUsuario: async (datos) => ({ success: true }),
-  obtenerIdeas: async () => ["Idea 1", "Idea 2"], // (Resumido)
-  obtenerTrends: async () => [{id:1, title: "Trend"}], // (Resumido)
-
   // NUEVO: Generador de Contenido
   generarContenido: async (tipoOrigen, datosInput, detallesNegocio) => {
     // Simulamos tiempo de "pensado"
@@ -142,5 +117,45 @@ export const api = {
         contenido: `✍️ **Copy Propuesto:**\n\n"${datosInput}..."\n\nEs lo que muchos piensan, pero aquí en **${detallesNegocio}** lo hacemos realidad. ✨\n\n✅ Calidad garantizada.\n✅ Envíos a todo el país.\n\n👇 Cuéntanos si estás de acuerdo en los comentarios.\n#Emprendimiento #Cusco`
       };
     }
+  },
+
+  registrarUsuario: async (datos) => ({ success: true }),
+
+  // NUEVO: Ideas inteligentes por Rubro
+  obtenerIdeas: async (rubro) => {
+    const db = {
+      'Gastronomía': [
+        "📸 **Detrás de Cámara:** Muestra al chef preparando el plato más pedido en cámara rápida.",
+        "🗣️ **Testimonio:** Graba la reacción genuina de un cliente al probar tu postre estrella.",
+        "✨ **ASMR:** Un video solo con los sonidos de tu cocina (cortar, freír, servir). Sin música."
+      ],
+      'Moda': [
+        "👗 **Transición:** Haz un cambio de outfit instantáneo con un chasquido de dedos.",
+        "📦 **Unboxing:** Muestra cómo empacas un pedido con cuidado y detalles bonitos.",
+        "💡 **Tip de Estilo:** Enseña 3 formas diferentes de usar la misma prenda."
+      ],
+      'Turismo': [
+        "🌄 **Pov:** 'Despierta conmigo en Cusco'. Muestra la vista desde tu hotel/tour.",
+        "🎒 **Checklist:** Qué llevar en la mochila para el tour de mañana.",
+        "📍 **Secreto:** Muestra un rincón poco conocido de la ciudad cerca de tu negocio."
+      ]
+    };
+    // Retorna las del rubro o unas genéricas si no coincide
+    return db[rubro] || [
+      "Muestra tu espacio de trabajo.",
+      "Presenta a tu equipo.",
+      "Cuenta la historia de cómo empezaste."
+    ];
+  },
+
+  obtenerTrends: async (rubro) => {
+    // Usamos videos de prueba de Google. Son horizontales, pero en el CSS
+    // usamos 'object-fit: cover' para recortarlos y que parezcan verticales.
+    const videos = [
+      { id: 1, title: 'Trend: Naturaleza', views: '1.2M', url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4' },
+      { id: 2, title: 'Audio Viral: "Joy"', views: '850k', url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4' },
+      { id: 3, title: 'Challenge: Fast', views: '2.5M', url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4' }
+    ];
+    return videos;
   }
-};  
+};

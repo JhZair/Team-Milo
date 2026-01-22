@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { theme } from '../styles/theme';
 import { api } from '../services/api';
+import miloLogo from '../assets/milo-logo.png'; // Asegúrate de importar el logo
 
-// --- MODAL DE LLUVIA DE IDEAS (Ya existente) ---
 const BrainstormModal = ({ isOpen, onClose, rubro }) => {
   const [activeTab, setActiveTab] = useState('ideas');
   const [ideas, setIdeas] = useState([]);
@@ -18,17 +18,57 @@ const BrainstormModal = ({ isOpen, onClose, rubro }) => {
   if (!isOpen) return null;
 
   const styles = {
-    overlay: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 2000, display: 'flex', justifyContent: 'center', alignItems: 'end' },
-    container: { width: '100%', height: '85%', backgroundColor: '#fff', borderTopLeftRadius: '25px', borderTopRightRadius: '25px', padding: '20px', display: 'flex', flexDirection: 'column', animation: 'slideUp 0.3s ease-out', boxSizing: 'border-box' },
+    overlay: { 
+      position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', 
+      backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 2000, 
+      display: 'flex', justifyContent: 'center', alignItems: 'end' 
+    },
+    container: { 
+      width: '100%', height: '92%', backgroundColor: '#fff', 
+      borderTopLeftRadius: '30px', borderTopRightRadius: '30px', 
+      padding: '25px', display: 'flex', flexDirection: 'column', 
+      animation: 'slideUp 0.3s ease-out', boxSizing: 'border-box' 
+    },
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
     title: { fontSize: '1.5rem', fontWeight: '900', color: theme.colors.red, margin: 0 },
     closeBtn: { background: 'none', border: 'none', fontSize: '2rem', color: theme.colors.dark, cursor: 'pointer' },
-    tabs: { display: 'flex', marginBottom: '20px', backgroundColor: '#f0f0f0', borderRadius: '12px', padding: '5px' },
-    tab: (isActive) => ({ flex: 1, padding: '12px', textAlign: 'center', borderRadius: '10px', backgroundColor: isActive ? '#fff' : 'transparent', color: isActive ? theme.colors.red : '#666', fontWeight: 'bold', cursor: 'pointer', boxShadow: isActive ? '0 2px 5px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s' }),
-    content: { flex: 1, overflowY: 'auto' },
-    ideaCard: { backgroundColor: '#FFF5F5', padding: '15px', borderRadius: '12px', marginBottom: '15px', borderLeft: `4px solid ${theme.colors.red}`, color: theme.colors.dark, fontSize: '0.95rem', lineHeight: '1.5' },
-    trendCard: { backgroundColor: '#1a1a1a', color: 'white', padding: '15px', borderRadius: '12px', marginBottom: '15px', display: 'flex', gap: '15px', alignItems: 'center' },
-    trendIcon: { fontSize: '1.5rem' },
+    tabs: { display: 'flex', marginBottom: '20px', backgroundColor: '#f5f5f5', borderRadius: '15px', padding: '5px' },
+    tab: (isActive) => ({ 
+      flex: 1, padding: '12px', textAlign: 'center', borderRadius: '12px', 
+      backgroundColor: isActive ? '#fff' : 'transparent', 
+      color: isActive ? theme.colors.red : '#888', 
+      fontWeight: 'bold', cursor: 'pointer', 
+      boxShadow: isActive ? '0 4px 10px rgba(0,0,0,0.05)' : 'none', 
+      transition: 'all 0.2s' 
+    }),
+    content: { flex: 1, overflowY: 'auto', paddingBottom: '20px' },
+    ideaCard: { 
+      backgroundColor: '#fff', padding: '20px', borderRadius: '18px', marginBottom: '15px', 
+      border: `1px solid #eee`, boxShadow: '0 4px 10px rgba(0,0,0,0.02)',
+      color: theme.colors.dark, fontSize: '0.95rem', lineHeight: '1.6' 
+    },
+    videoCard: {
+      position: 'relative', borderRadius: '20px', overflow: 'hidden',
+      marginBottom: '20px', boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
+      backgroundColor: '#000', minHeight: '200px'
+    },
+    videoPlayer: {
+      width: '100%',
+      height: '450px', 
+      objectFit: 'cover', // ESTO ES CLAVE: Recorta el video horizontal para llenar la pantalla vertical
+      display: 'block',
+      backgroundColor: '#000'
+    },
+    videoOverlay: {
+      position: 'absolute', bottom: 0, left: 0, width: '100%', padding: '20px',
+      background: 'linear-gradient(to top, rgba(0,0,0,0.9), transparent)',
+      color: 'white', boxSizing: 'border-box'
+    },
+    viewsBadge: {
+      backgroundColor: 'rgba(255,255,255,0.2)', padding: '5px 10px',
+      borderRadius: '10px', fontSize: '0.8rem', backdropFilter: 'blur(5px)',
+      display: 'inline-block', marginBottom: '8px'
+    }
   };
 
   return (
@@ -39,11 +79,38 @@ const BrainstormModal = ({ isOpen, onClose, rubro }) => {
           <button onClick={onClose} style={styles.closeBtn}>&times;</button>
         </div>
         <div style={styles.tabs}>
-          <div style={styles.tab(activeTab === 'ideas')} onClick={() => setActiveTab('ideas')}>📝 Ideas Texto</div>
-          <div style={styles.tab(activeTab === 'trends')} onClick={() => setActiveTab('trends')}>🔥 Trends Virales</div>
+          <div style={styles.tab(activeTab === 'ideas')} onClick={() => setActiveTab('ideas')}>📝 Ideas</div>
+          <div style={styles.tab(activeTab === 'trends')} onClick={() => setActiveTab('trends')}>🔥 Trends</div>
         </div>
-        <div style={styles.content}>
-          {activeTab === 'ideas' ? ideas.map((idea, i) => <div key={i} style={styles.ideaCard}>{idea}</div>) : trends.map((trend) => <div key={trend.id} style={styles.trendCard}><div style={styles.trendIcon}>{trend.platform === 'TikTok' ? '🎵' : '📸'}</div><div><div style={{fontWeight: 'bold', marginBottom: '5px'}}>{trend.title}</div><div style={{fontSize: '0.8rem', opacity: 0.8}}>{trend.views} vistas • {trend.desc}</div></div></div>)}
+        <div style={styles.content} className="hide-scrollbar">
+          {activeTab === 'ideas' ? (
+            ideas.map((idea, i) => (
+              <div key={i} style={styles.ideaCard}>
+                <div dangerouslySetInnerHTML={{ __html: idea.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+              </div>
+            ))
+          ) : (
+            trends.map((trend) => (
+              <div key={trend.id} style={styles.videoCard}>
+                <video 
+                  src={trend.url} 
+                  style={styles.videoPlayer} 
+                  autoPlay 
+                  muted 
+                  loop 
+                  playsInline 
+                  onError={(e) => {
+                    e.target.style.display = 'none'; // Oculta el video roto
+                    e.target.parentElement.style.backgroundColor = '#333'; // Pone fondo gris
+                  }}
+                />
+                <div style={styles.videoOverlay}>
+                  <div style={styles.viewsBadge}>👁 {trend.views} vistas</div>
+                  <div style={{fontWeight: 'bold', fontSize: '1.2rem', marginBottom: '5px'}}>{trend.title}</div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
       <style>{`@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }`}</style>
@@ -51,216 +118,169 @@ const BrainstormModal = ({ isOpen, onClose, rubro }) => {
   );
 };
 
-// --- NUEVO: MODAL CREAR CONTENIDO (Multistep) ---
+// --- MODAL CREAR CONTENIDO (Multistep) ---
 const CreateContentModal = ({ isOpen, onClose }) => {
-  const [step, setStep] = useState(1); // 1: Selección, 2: Input, 3: Detalles, 4: Resultado
-  const [sourceType, setSourceType] = useState(null); // 'referencia' o 'idea'
-  const [inputValue, setInputValue] = useState(''); // Link o Texto de idea
-  const [details, setDetails] = useState(''); // Detalles del negocio
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-
-  if (!isOpen) return null;
-
-  const handleNext = async () => {
-    if (step === 2) {
-      setStep(3);
-    } else if (step === 3) {
-      setLoading(true);
-      const generated = await api.generarContenido(sourceType, inputValue, details);
-      setResult(generated);
-      setLoading(false);
-      setStep(4);
-    }
-  };
-
-  const reset = () => {
-    setStep(1); setSourceType(null); setInputValue(''); setDetails(''); setResult(null); onClose();
-  };
-
-  const styles = {
-    overlay: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: '#fff', zIndex: 2000, padding: '20px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' },
-    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' },
-    title: { fontSize: '1.5rem', fontWeight: '900', color: theme.colors.dark, margin: 0 },
-    closeBtn: { background: 'none', border: 'none', fontSize: '2rem', color: '#666', cursor: 'pointer' },
-    
-    // Cards de selección
-    selectionGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '20px' },
-    selectionCard: { padding: '30px 10px', borderRadius: '15px', border: '2px solid #eee', backgroundColor: '#f9f9f9', textAlign: 'center', cursor: 'pointer', transition: 'all 0.2s' },
-    icon: { fontSize: '3rem', marginBottom: '10px', display: 'block' },
-    label: { fontWeight: 'bold', color: theme.colors.dark },
-    
-    // Inputs
-    labelInput: { display: 'block', marginBottom: '10px', fontWeight: 'bold', color: theme.colors.dark },
-    textArea: { width: '100%', padding: '15px', borderRadius: '12px', border: '2px solid #eee', fontSize: '1rem', height: '120px', marginBottom: '20px', boxSizing: 'border-box', fontFamily: 'inherit' },
-    fileZone: { border: '2px dashed #ccc', borderRadius: '12px', padding: '30px', textAlign: 'center', color: '#888', marginBottom: '20px', cursor: 'pointer' },
-    
-    // Resultado
-    resultBox: { backgroundColor: '#F3F4F6', padding: '20px', borderRadius: '15px', borderLeft: `5px solid ${theme.colors.red}`, overflowY: 'auto', flex: 1, marginBottom: '20px', whiteSpace: 'pre-wrap' },
-    
-    btnPrimary: { width: '100%', padding: '18px', backgroundColor: theme.colors.red, color: 'white', border: 'none', borderRadius: '12px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer', marginTop: 'auto' },
-    btnSecondary: { width: '100%', padding: '15px', background: 'transparent', color: '#666', border: 'none', cursor: 'pointer', marginTop: '10px' }
-  };
-
-  return (
-    <div style={styles.overlay}>
-      <div style={styles.header}>
-        <h2 style={styles.title}>
-          {step === 1 && "Nuevo Contenido"}
-          {step === 2 && (sourceType === 'referencia' ? "Sube tu Referencia" : "Escribe tu Idea")}
-          {step === 3 && "Detalles del Negocio"}
-          {step === 4 && "¡Listo!"}
-        </h2>
-        <button onClick={reset} style={styles.closeBtn}>&times;</button>
-      </div>
-
-      {step === 1 && (
-        <div style={{flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
-          <p style={{textAlign: 'center', color: '#666', marginBottom: '30px'}}>¿En qué nos basamos hoy?</p>
-          <div style={styles.selectionGrid}>
+    const [step, setStep] = useState(1);
+    const [sourceType, setSourceType] = useState(null);
+    const [inputValue, setInputValue] = useState('');
+    const [details, setDetails] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [result, setResult] = useState(null);
+  
+    if (!isOpen) return null;
+  
+    const handleNext = async () => {
+      if (step === 2) { setStep(3); } 
+      else if (step === 3) {
+        setLoading(true);
+        const generated = await api.generarContenido(sourceType, inputValue, details);
+        setResult(generated);
+        setLoading(false);
+        setStep(4);
+      }
+    };
+  
+    const reset = () => { setStep(1); setSourceType(null); setInputValue(''); setDetails(''); setResult(null); onClose(); };
+  
+    const styles = {
+      overlay: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: '#fff', zIndex: 2000, padding: '25px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' },
+      header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingTop: '20px' },
+      title: { fontSize: '1.4rem', fontWeight: '900', color: theme.colors.dark, margin: 0 },
+      closeBtn: { background: 'none', border: 'none', fontSize: '2rem', color: '#333', cursor: 'pointer' },
+      selectionCard: { padding: '25px', borderRadius: '18px', border: '1px solid #eee', backgroundColor: '#FAFAFA', textAlign: 'center', cursor: 'pointer', marginBottom: '15px', transition: 'all 0.2s', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' },
+      textArea: { width: '100%', padding: '15px', borderRadius: '12px', border: '1px solid #ddd', fontSize: '1rem', height: '120px', marginBottom: '20px', boxSizing: 'border-box', fontFamily: 'inherit', backgroundColor: '#fff' },
+      btnPrimary: { width: '100%', padding: '18px', backgroundColor: theme.colors.dark, color: 'white', border: 'none', borderRadius: '14px', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', marginTop: 'auto', boxShadow: '0 5px 15px rgba(0,0,0,0.1)' },
+      resultBox: { backgroundColor: '#F9F1E2', padding: '20px', borderRadius: '15px', border: `1px solid ${theme.colors.cream}`, flex: 1, marginBottom: '20px', whiteSpace: 'pre-wrap', color: theme.colors.dark }
+    };
+  
+    return (
+      <div style={styles.overlay}>
+        <div style={styles.header}>
+          <h2 style={styles.title}>{step === 1 ? "Crear Nuevo" : step === 4 ? "Resultado IA" : "Paso " + step}</h2>
+          <button onClick={reset} style={styles.closeBtn}>&times;</button>
+        </div>
+        
+        {step === 1 && (
+          <div style={{flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
             <div style={styles.selectionCard} onClick={() => { setSourceType('referencia'); setStep(2); }}>
-              <span style={styles.icon}>🔗</span>
-              <span style={styles.label}>Referencia</span>
-              <p style={{fontSize: '0.8rem', color: '#888', marginTop: '5px'}}>Links, Videos, Fotos</p>
+              <div style={{fontSize: '2.5rem', marginBottom: '10px'}}>🔗</div>
+              <div style={{fontWeight: 'bold', color: theme.colors.dark}}>Desde Referencia</div>
             </div>
             <div style={styles.selectionCard} onClick={() => { setSourceType('idea'); setStep(2); }}>
-              <span style={styles.icon}>💡</span>
-              <span style={styles.label}>Idea Propia</span>
-              <p style={{fontSize: '0.8rem', color: '#888', marginTop: '5px'}}>Texto, Borradores</p>
+              <div style={{fontSize: '2.5rem', marginBottom: '10px'}}>🧠</div>
+              <div style={{fontWeight: 'bold', color: theme.colors.dark}}>Desde Idea</div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+        
+        {(step === 2 || step === 3) && (
+            <div style={{flex: 1}}>
+                <p style={{marginBottom: '15px', color: '#666'}}>
+                    {step === 2 ? (sourceType === 'referencia' ? "Pega el link del video:" : "Escribe tu idea:") : "Detalles de tu negocio:"}
+                </p>
+                <textarea 
+                    style={styles.textArea} 
+                    value={step === 2 ? inputValue : details} 
+                    onChange={(e) => step === 2 ? setInputValue(e.target.value) : setDetails(e.target.value)}
+                    placeholder="..."
+                />
+                <button style={styles.btnPrimary} onClick={handleNext}>{loading ? 'Pensando...' : 'Siguiente'}</button>
+            </div>
+        )}
 
-      {step === 2 && (
-        <div style={{flex: 1}}>
-          {sourceType === 'referencia' ? (
-            <>
-              <div style={styles.fileZone} onClick={() => alert('Simulación: Archivo subido')}>
-                📂 Toca para subir imagen/video
-              </div>
-              <label style={styles.labelInput}>O pega un link (Instagram/TikTok):</label>
-              <input 
-                type="text" 
-                placeholder="https://..." 
-                style={{...styles.textArea, height: '50px'}} 
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-              />
-            </>
-          ) : (
-            <>
-              <label style={styles.labelInput}>Describe tu idea:</label>
-              <textarea 
-                placeholder="Ej: Quiero hablar sobre mis ofertas de fin de año..." 
-                style={styles.textArea}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-              />
-            </>
-          )}
-          <button style={styles.btnPrimary} onClick={handleNext}>Siguiente</button>
-        </div>
-      )}
-
-      {step === 3 && (
-        <div style={{flex: 1, display: 'flex', flexDirection: 'column'}}>
-          <p style={{color: '#666', marginBottom: '20px'}}>
-            Para que la IA adapte el contenido, dinos qué producto o servicio quieres destacar.
-          </p>
-          <label style={styles.labelInput}>Detalles clave:</label>
-          <textarea 
-            placeholder="Ej: Zapatillas Urbanas Modelo X, color rojo, precio S/150..." 
-            style={styles.textArea}
-            value={details}
-            onChange={(e) => setDetails(e.target.value)}
-          />
-          <button style={styles.btnPrimary} onClick={handleNext}>
-            {loading ? 'Generando...' : 'Crear Contenido'}
-          </button>
-        </div>
-      )}
-
-      {step === 4 && result && (
-        <div style={{flex: 1, display: 'flex', flexDirection: 'column'}}>
-          <h3 style={{color: theme.colors.red, marginTop: 0}}>{result.tipo}</h3>
-          <div style={styles.resultBox}>
-            {result.contenido}
+        {step === 4 && result && (
+          <div style={{flex: 1, display: 'flex', flexDirection: 'column'}}>
+             <h3 style={{margin: '0 0 10px 0', color: theme.colors.red}}>{result.tipo}</h3>
+             <div style={styles.resultBox}>{result.contenido}</div>
+             <button style={styles.btnPrimary} onClick={reset}>Finalizar</button>
           </div>
-          <button style={styles.btnPrimary} onClick={() => { alert('Guardado en Borradores'); reset(); }}>
-            Usar este Guion
-          </button>
-          <button style={styles.btnSecondary} onClick={() => setStep(2)}>
-            Intentar de nuevo
-          </button>
-        </div>
-      )}
-    </div>
-  );
+        )}
+      </div>
+    );
 };
 
-// --- DASHBOARD PRINCIPAL ---
+// --- DASHBOARD PRINCIPAL (REDISEÑADO) ---
 const Dashboard = ({ onLogout, userData, initialGoal }) => {
   const [salesGoal, setSalesGoal] = useState(initialGoal || '0');
   const [showBrainstorm, setShowBrainstorm] = useState(false);
-  const [showCreate, setShowCreate] = useState(false); // NUEVO ESTADO
+  const [showCreate, setShowCreate] = useState(false);
   const [hasNewTrends, setHasNewTrends] = useState(true);
   const [isEditingGoal, setIsEditingGoal] = useState(false);
   const [tempGoal, setTempGoal] = useState(salesGoal);
 
-  const handleGoalUpdate = () => {
-    setSalesGoal(tempGoal);
-    setIsEditingGoal(false);
-  };
+  const handleGoalUpdate = () => { setSalesGoal(tempGoal); setIsEditingGoal(false); };
 
   const styles = {
-    wrapper: { position: 'relative', width: '100%', height: '100%', backgroundColor: '#fff', display: 'flex', flexDirection: 'column', padding: '20px', boxSizing: 'border-box' },
-    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' },
-    welcome: { fontSize: '1.5rem', fontWeight: '900', color: theme.colors.dark, margin: 0 },
-    subWelcome: { fontSize: '0.9rem', color: '#666', margin: 0 },
+    // FONDO GENERAL
+    wrapper: { position: 'relative', width: '100%', height: '100%', backgroundColor: '#FAFAFA', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' },
     
-    goalContainer: { backgroundColor: theme.colors.cream, padding: '10px 15px', borderRadius: '12px', textAlign: 'right', cursor: 'pointer', border: '1px solid #eee' },
-    goalLabel: { fontSize: '0.7rem', color: theme.colors.red, fontWeight: 'bold', textTransform: 'uppercase' },
-    goalAmount: { fontSize: '1.2rem', fontWeight: '900', color: theme.colors.dark },
-    
-    mainActionContainer: { 
-      display: 'flex', 
-      flexDirection: 'column', // Apilar botones
-      alignItems: 'center', 
-      justifyContent: 'center',
-      marginTop: '10px',
-      gap: '25px', // Espacio entre botones
-      flex: 1 // Ocupar espacio central disponible
+    // HEADER AJUSTADO
+    headerBg: {
+      backgroundColor: theme.colors.cream,
+      // Reduje un poco el padding inferior para compensar el logo más grande
+      padding: '50px 25px 25px 25px', 
+      borderBottomLeftRadius: '35px',
+      borderBottomRightRadius: '35px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '10px',
+      boxShadow: '0 10px 30px rgba(0,0,0,0.03)'
     },
+    topBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
     
-    // BOTÓN 1: LLUVIA DE IDEAS (Grande)
-    brainstormBtn: { 
-      width: '180px', height: '180px', borderRadius: '50%', backgroundColor: theme.colors.red, 
-      color: 'white', border: 'none', boxShadow: '0 20px 40px rgba(227, 27, 35, 0.3)',
-      display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-      cursor: 'pointer', position: 'relative', transition: 'transform 0.2s', zIndex: 10
+    // LOGO MÁS GRANDE
+    logo: { 
+      height: '50px', // Aumentado de 30px a 50px
+      objectFit: 'contain',
+      display: 'block' 
     },
-    btnIcon: { fontSize: '2.5rem', marginBottom: '5px' },
-    btnText: { fontSize: '1.1rem', fontWeight: 'bold' },
-    notification: { position: 'absolute', top: '15px', right: '15px', width: '25px', height: '25px', backgroundColor: '#FFD700', borderRadius: '50%', border: '3px solid white', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '0.8rem', fontWeight: 'bold', color: theme.colors.dark },
+    welcomeText: { fontSize: '1.4rem', fontWeight: '900', color: theme.colors.dark, margin: 0 },
+    subWelcome: { fontSize: '0.9rem', color: '#888', margin: 0 },
 
-    // BOTÓN 2: CREAR CONTENIDO (Más rectangular/ancho)
-    createBtn: {
-      width: '80%',
+    // TARJETA DE OBJETIVO (Integrada visualmente)
+    goalCard: {
+      backgroundColor: 'white',
       padding: '15px 20px',
-      backgroundColor: theme.colors.dark,
-      color: 'white',
-      borderRadius: '15px',
-      border: 'none',
+      borderRadius: '16px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: '10px',
+      boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
+      cursor: 'pointer'
+    },
+    goalLabel: { fontSize: '0.75rem', fontWeight: 'bold', color: '#999', textTransform: 'uppercase' },
+    goalValue: { fontSize: '1.2rem', fontWeight: '900', color: theme.colors.red },
+
+    // 2. CONTENIDO PRINCIPAL (GRID)
+    mainContent: { flex: 1, padding: '30px 25px', display: 'flex', flexDirection: 'column', gap: '20px' },
+    sectionTitle: { fontSize: '1rem', fontWeight: 'bold', color: '#333', marginBottom: '15px' },
+    
+    // TARJETAS DE ACCIÓN (En lugar de botones sueltos)
+    actionCard: {
+      backgroundColor: 'white',
+      borderRadius: '20px',
+      padding: '25px',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center',
-      gap: '10px',
-      fontSize: '1rem',
-      fontWeight: 'bold',
+      gap: '20px',
+      boxShadow: '0 10px 20px rgba(0,0,0,0.03)',
       cursor: 'pointer',
-      boxShadow: '0 10px 20px rgba(0,0,0,0.1)'
+      transition: 'transform 0.2s',
+      position: 'relative',
+      border: '1px solid #f0f0f0'
     },
+    actionIconBox: (color) => ({
+      width: '60px', height: '60px', borderRadius: '15px', backgroundColor: color, 
+      display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '1.8rem', color: 'white',
+      boxShadow: `0 8px 15px ${color}40` // Sombra de color
+    }),
+    actionTextGroup: { flex: 1 },
+    actionTitle: { fontSize: '1.1rem', fontWeight: 'bold', color: theme.colors.dark, margin: '0 0 5px 0' },
+    actionDesc: { fontSize: '0.8rem', color: '#888', margin: 0 },
+    
+    // Notificación
+    notificationDot: { position: 'absolute', top: '20px', right: '20px', width: '12px', height: '12px', backgroundColor: '#FFD700', borderRadius: '50%', border: '2px solid white' },
 
     editOverlay: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(255,255,255,0.98)', zIndex: 100, display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', borderRadius: '0' },
     editInput: { fontSize: '2rem', border: 'none', borderBottom: '2px solid red', textAlign: 'center', marginBottom: '20px', width: '200px', outline: 'none', backgroundColor: 'transparent' }
@@ -269,40 +289,64 @@ const Dashboard = ({ onLogout, userData, initialGoal }) => {
   return (
     <div style={styles.wrapper}>
       
-      <div style={styles.header}>
+      {/* HEADER ELEGANTE */}
+      <div style={styles.headerBg}>
+        <div style={styles.topBar}>
+           {/* LOGO AQUÍ */}
+           <img src={miloLogo} alt="Milo" style={styles.logo} />
+           <button onClick={onLogout} style={{background: 'none', border: 'none', fontSize: '0.8rem', fontWeight: 'bold', color: theme.colors.red, cursor: 'pointer'}}>Salir</button>
+        </div>
+        
         <div>
-          <h1 style={styles.welcome}>Hola, {userData?.nombreNegocio || 'Empresario'}</h1>
+          <h1 style={styles.welcomeText}>Hola, {userData?.nombreNegocio || 'Socio'}</h1>
           <p style={styles.subWelcome}>{userData?.rubro || 'General'}</p>
         </div>
-        <div style={styles.goalContainer} onClick={() => { setTempGoal(salesGoal); setIsEditingGoal(true); }}>
-          <div style={styles.goalLabel}>Meta Mensual</div>
-          <div style={styles.goalAmount}>S/ {salesGoal} ✏️</div>
+
+        {/* TARJETA DE OBJETIVO */}
+        <div style={styles.goalCard} onClick={() => { setTempGoal(salesGoal); setIsEditingGoal(true); }}>
+          <div>
+            <div style={styles.goalLabel}>Objetivo Mensual</div>
+            <div style={{fontSize: '0.8rem', color: '#bbb'}}>Toca para editar</div>
+          </div>
+          <div style={styles.goalValue}>S/ {salesGoal}</div>
         </div>
       </div>
 
-      <div style={styles.mainActionContainer}>
-        {/* BOTÓN 1 */}
-        <button 
-          style={styles.brainstormBtn} 
+      {/* ZONA DE ACCIONES */}
+      <div style={styles.mainContent}>
+        <div style={styles.sectionTitle}>Panel de Control</div>
+
+        {/* TARJETA 1: LLUVIA DE IDEAS */}
+        <div 
+          style={styles.actionCard} 
           onClick={() => { setShowBrainstorm(true); setHasNewTrends(false); }}
+          onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
+          onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
         >
-          {hasNewTrends && <div style={styles.notification}>!</div>}
-          <div style={styles.btnIcon}>🧠</div>
-          <div style={styles.btnText}>Lluvia de<br/>Ideas</div>
-        </button>
+          {hasNewTrends && <div style={styles.notificationDot}></div>}
+          <div style={styles.actionIconBox(theme.colors.red)}>🧠</div>
+          <div style={styles.actionTextGroup}>
+            <h3 style={styles.actionTitle}>Inspiración</h3>
+            <p style={styles.actionDesc}>Descubre ideas y trends virales para hoy.</p>
+          </div>
+          <div style={{color: '#ddd', fontSize: '1.5rem'}}>›</div>
+        </div>
 
-        {/* BOTÓN 2 - NUEVO */}
-        <button 
-          style={styles.createBtn}
+        {/* TARJETA 2: CREAR CONTENIDO */}
+        <div 
+          style={styles.actionCard}
           onClick={() => setShowCreate(true)}
+          onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
+          onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
         >
-          <span style={{fontSize: '1.5rem'}}>✨</span>
-          Crear Contenido Nuevo
-        </button>
-      </div>
+          <div style={styles.actionIconBox(theme.colors.dark)}>✨</div>
+          <div style={styles.actionTextGroup}>
+            <h3 style={styles.actionTitle}>Producir</h3>
+            <p style={styles.actionDesc}>Genera guiones y copys con IA.</p>
+          </div>
+          <div style={{color: '#ddd', fontSize: '1.5rem'}}>›</div>
+        </div>
 
-      <div style={{textAlign: 'center', paddingBottom: '20px'}}>
-        <button onClick={onLogout} style={{background: 'none', border: 'none', color: '#999', textDecoration: 'underline', cursor: 'pointer'}}>Cerrar Sesión</button>
       </div>
 
       {/* MODALES */}
@@ -310,13 +354,11 @@ const Dashboard = ({ onLogout, userData, initialGoal }) => {
         <div style={styles.editOverlay}>
           <h3>Editar Meta</h3>
           <input type="number" value={tempGoal} onChange={(e) => setTempGoal(e.target.value)} style={styles.editInput} autoFocus />
-          <button onClick={handleGoalUpdate} style={{padding: '10px 30px', background: theme.colors.red, color: 'white', border: 'none', borderRadius: '10px', fontSize: '1rem', cursor: 'pointer'}}>Guardar</button>
+          <button onClick={handleGoalUpdate} style={{padding: '12px 30px', background: theme.colors.red, color: 'white', border: 'none', borderRadius: '12px', fontSize: '1rem', cursor: 'pointer', fontWeight: 'bold'}}>Guardar Cambios</button>
         </div>
       )}
 
       <BrainstormModal isOpen={showBrainstorm} onClose={() => setShowBrainstorm(false)} rubro={userData?.rubro} />
-      
-      {/* NUEVO MODAL CONECTADO */}
       <CreateContentModal isOpen={showCreate} onClose={() => setShowCreate(false)} />
     </div>
   );

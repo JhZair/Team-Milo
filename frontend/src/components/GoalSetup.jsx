@@ -17,8 +17,9 @@ const GoalSetup = ({ onConfirm }) => {
       backgroundColor: theme.colors.white,
       display: 'flex',
       flexDirection: 'column',
-      justifyContent: 'center',
+      justifyContent: 'center', // Centrado vertical puro
       padding: '30px',
+      paddingTop: '60px', // IMPORTANTE: Espacio para que el Notch no tape el título
       boxSizing: 'border-box',
       textAlign: 'center'
     },
