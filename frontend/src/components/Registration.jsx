@@ -33,20 +33,20 @@ const Registration = ({ onComplete }) => {
 
   const styles = {
     wrapper: {
-      width: '100vw',
-      minHeight: '100vh',
-      backgroundColor: theme.colors.cream,
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: '20px',
-      boxSizing: 'border-box'
+    width: '100%',        // Adaptarse al teléfono
+    minHeight: '100%',    // Llenar el teléfono
+    backgroundColor: theme.colors.cream,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center', // Centrar verticalmente en el teléfono
+    padding: '20px',
+    boxSizing: 'border-box'
     },
     card: {
       backgroundColor: theme.colors.white,
       width: '100%',
       maxWidth: '500px',
-      padding: '40px',
+      padding: '30px 20px',
       borderRadius: '24px',
       boxShadow: '0 20px 40px rgba(0,0,0,0.05)',
       textAlign: 'center'

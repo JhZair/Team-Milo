@@ -97,5 +97,50 @@ export const api = {
     const respuestaBase = respuestas[intencion]?.[rubro] || respuestas[intencion]?.['default'] || "Claro, estoy analizando tu negocio para darte la mejor opción...";
     
     return respuestaBase;
+  },
+
+  registrarUsuario: async (datos) => ({ success: true }),
+
+  // NUEVO: Ideas de texto
+  obtenerIdeas: async (rubro) => {
+    return [
+      "Publica una foto del 'detrás de cámaras' de tu producto estrella.",
+      "Crea una encuesta: ¿Qué sabor/color prefieren tus clientes para el viernes?",
+      "Comparte la historia de tu primer cliente satisfecho.",
+      "Haz un video rápido respondiendo la pregunta más frecuente que te hacen.",
+      "Oferta relámpago: 'Solo por las próximas 3 horas' en historias."
+    ];
+  },
+
+  // NUEVO: Trends (Simulación de TikToks/Reels)
+  obtenerTrends: async (rubro) => {
+    return [
+      { id: 1, platform: 'TikTok', title: 'Audio Viral: "Capybara"', views: '1.2M', desc: 'Usa este audio mostrando tus productos en fila.' },
+      { id: 2, platform: 'Instagram', title: 'Plantilla: "Mi día en 3 segundos"', views: '850k', desc: 'Cortes rápidos de tu proceso de trabajo.' },
+      { id: 3, platform: 'TikTok', title: 'Trend: "Pedro Pedro"', views: '2.5M', desc: 'Pon a tu producto girando con este audio.' }
+    ];
+  },
+  registrarUsuario: async (datos) => ({ success: true }),
+  obtenerIdeas: async () => ["Idea 1", "Idea 2"], // (Resumido)
+  obtenerTrends: async () => [{id:1, title: "Trend"}], // (Resumido)
+
+  // NUEVO: Generador de Contenido
+  generarContenido: async (tipoOrigen, datosInput, detallesNegocio) => {
+    // Simulamos tiempo de "pensado"
+    await new Promise(r => setTimeout(r, 2000));
+
+    if (tipoOrigen === 'referencia') {
+      return {
+        tipo: 'Guion de Reel (Basado en Referencia)',
+        titulo: 'Adaptación de Tendencia',
+        contenido: `🎥 **Estructura Sugerida:**\n\n1. **Visual (0-3s):** ${detallesNegocio} (Tu producto) entrando en escena igual que en el video de referencia.\n2. **Audio:** Usar el mismo audio del link enviado.\n3. **Texto en pantalla:** "Cuando pruebas ${detallesNegocio} por primera vez..."\n4. **Cierre:** Muestra tu logo y una flecha al link de la bio.\n\n💡 **Tip:** Imita la iluminación del video original.`
+      };
+    } else {
+      return {
+        tipo: 'Post / Copy (Basado en Idea)',
+        titulo: 'Desarrollo de tu Idea',
+        contenido: `✍️ **Copy Propuesto:**\n\n"${datosInput}..."\n\nEs lo que muchos piensan, pero aquí en **${detallesNegocio}** lo hacemos realidad. ✨\n\n✅ Calidad garantizada.\n✅ Envíos a todo el país.\n\n👇 Cuéntanos si estás de acuerdo en los comentarios.\n#Emprendimiento #Cusco`
+      };
+    }
   }
 };  

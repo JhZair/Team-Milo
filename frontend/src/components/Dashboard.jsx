@@ -1,328 +1,323 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { theme } from '../styles/theme';
 import { api } from '../services/api';
 
-// --- COMPONENTE MODAL INTERNO ---
-const Modal = ({ isOpen, onClose, title, children }) => {
+// --- MODAL DE LLUVIA DE IDEAS (Ya existente) ---
+const BrainstormModal = ({ isOpen, onClose, rubro }) => {
+  const [activeTab, setActiveTab] = useState('ideas');
+  const [ideas, setIdeas] = useState([]);
+  const [trends, setTrends] = useState([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      api.obtenerIdeas(rubro).then(setIdeas);
+      api.obtenerTrends(rubro).then(setTrends);
+    }
+  }, [isOpen, rubro]);
+
   if (!isOpen) return null;
+
+  const styles = {
+    overlay: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 2000, display: 'flex', justifyContent: 'center', alignItems: 'end' },
+    container: { width: '100%', height: '85%', backgroundColor: '#fff', borderTopLeftRadius: '25px', borderTopRightRadius: '25px', padding: '20px', display: 'flex', flexDirection: 'column', animation: 'slideUp 0.3s ease-out', boxSizing: 'border-box' },
+    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
+    title: { fontSize: '1.5rem', fontWeight: '900', color: theme.colors.red, margin: 0 },
+    closeBtn: { background: 'none', border: 'none', fontSize: '2rem', color: theme.colors.dark, cursor: 'pointer' },
+    tabs: { display: 'flex', marginBottom: '20px', backgroundColor: '#f0f0f0', borderRadius: '12px', padding: '5px' },
+    tab: (isActive) => ({ flex: 1, padding: '12px', textAlign: 'center', borderRadius: '10px', backgroundColor: isActive ? '#fff' : 'transparent', color: isActive ? theme.colors.red : '#666', fontWeight: 'bold', cursor: 'pointer', boxShadow: isActive ? '0 2px 5px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s' }),
+    content: { flex: 1, overflowY: 'auto' },
+    ideaCard: { backgroundColor: '#FFF5F5', padding: '15px', borderRadius: '12px', marginBottom: '15px', borderLeft: `4px solid ${theme.colors.red}`, color: theme.colors.dark, fontSize: '0.95rem', lineHeight: '1.5' },
+    trendCard: { backgroundColor: '#1a1a1a', color: 'white', padding: '15px', borderRadius: '12px', marginBottom: '15px', display: 'flex', gap: '15px', alignItems: 'center' },
+    trendIcon: { fontSize: '1.5rem' },
+  };
+
   return (
-    <div style={{
-      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.7)', // Fondo oscuro para resaltar
-      display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
-    }}>
-      <div style={{
-        backgroundColor: 'white', padding: '30px', borderRadius: '20px', width: '90%', maxWidth: '400px',
-        position: 'relative', boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
-      }}>
-        <button 
-          onClick={onClose} 
-          style={{position: 'absolute', top: '15px', right: '15px', border: 'none', background: 'transparent', fontSize: '1.8rem', cursor: 'pointer', color: theme.colors.dark, fontWeight: 'bold'}}
-        >
-          &times;
-        </button>
-        <h3 style={{marginTop: 0, color: theme.colors.red, fontSize: '1.5rem', borderBottom: `1px solid ${theme.colors.red}`, paddingBottom: '10px'}}>{title}</h3>
-        {children}
+    <div style={styles.overlay}>
+      <div style={styles.container}>
+        <div style={styles.header}>
+          <h2 style={styles.title}>💡 Inspiración</h2>
+          <button onClick={onClose} style={styles.closeBtn}>&times;</button>
+        </div>
+        <div style={styles.tabs}>
+          <div style={styles.tab(activeTab === 'ideas')} onClick={() => setActiveTab('ideas')}>📝 Ideas Texto</div>
+          <div style={styles.tab(activeTab === 'trends')} onClick={() => setActiveTab('trends')}>🔥 Trends Virales</div>
+        </div>
+        <div style={styles.content}>
+          {activeTab === 'ideas' ? ideas.map((idea, i) => <div key={i} style={styles.ideaCard}>{idea}</div>) : trends.map((trend) => <div key={trend.id} style={styles.trendCard}><div style={styles.trendIcon}>{trend.platform === 'TikTok' ? '🎵' : '📸'}</div><div><div style={{fontWeight: 'bold', marginBottom: '5px'}}>{trend.title}</div><div style={{fontSize: '0.8rem', opacity: 0.8}}>{trend.views} vistas • {trend.desc}</div></div></div>)}
+        </div>
       </div>
+      <style>{`@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }`}</style>
     </div>
   );
 };
 
-const Dashboard = ({ onLogout, userData }) => {
-  const negocio = userData?.nombreNegocio || "Mi Negocio";
-  const rubro = userData?.rubro || "Gastronomía";
-  const ciudad = userData?.ciudad || "Cusco";
+// --- NUEVO: MODAL CREAR CONTENIDO (Multistep) ---
+const CreateContentModal = ({ isOpen, onClose }) => {
+  const [step, setStep] = useState(1); // 1: Selección, 2: Input, 3: Detalles, 4: Resultado
+  const [sourceType, setSourceType] = useState(null); // 'referencia' o 'idea'
+  const [inputValue, setInputValue] = useState(''); // Link o Texto de idea
+  const [details, setDetails] = useState(''); // Detalles del negocio
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
 
-  // --- ESTADOS DE ECONOMÍA ---
-  const [saldo, setSaldo] = useState(120.50);
-  const [tokens, setTokens] = useState(50); // Iniciamos con pocos tokens para probar la mecánica
-  const COSTO_POR_MENSAJE = 20; // Costo por uso de IA
-  const RATIO_RECARGA = 10; // 1 Sol recargado = 10 Tokens de regalo
+  if (!isOpen) return null;
 
-  const [movimientos, setMovimientos] = useState([]);
-  
-  // --- ESTADOS DE CHAT ---
-  const [mensajes, setMensajes] = useState([]);
-  const [isTyping, setIsTyping] = useState(false);
-  
-  // --- ESTADOS DE MODALES ---
-  const [showYapeModal, setShowYapeModal] = useState(false);
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [montoRecarga, setMontoRecarga] = useState(50);
-
-  const chatEndRef = useRef(null);
-
-  useEffect(() => {
-    api.getMovimientosWallet().then(data => setMovimientos(data));
-    setMensajes([{ 
-      id: 0, 
-      sender: 'bot', 
-      text: `Hola, soy tu Director de Marketing. Tienes ${tokens} créditos disponibles. ¿En qué trabajamos hoy?` 
-    }]);
-  }, [negocio, ciudad]); // eslint-disable-line
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [mensajes]);
-
-  // --- LÓGICA DE CHAT CON TOKENS ---
-  const handleOpcionChat = async (opcion) => {
-    // 1. Validar Tokens
-    if (tokens < COSTO_POR_MENSAJE) {
-      alert("🚫 Sin créditos suficientes. Recarga tu Ad-Wallet para obtener más.");
-      return; 
+  const handleNext = async () => {
+    if (step === 2) {
+      setStep(3);
+    } else if (step === 3) {
+      setLoading(true);
+      const generated = await api.generarContenido(sourceType, inputValue, details);
+      setResult(generated);
+      setLoading(false);
+      setStep(4);
     }
-
-    // 2. Descontar Tokens
-    setTokens(prev => prev - COSTO_POR_MENSAJE);
-
-    // 3. Flujo Normal de Chat
-    const nuevoMsgUser = { id: Date.now(), sender: 'user', text: opcion };
-    setMensajes(prev => [...prev, nuevoMsgUser]);
-    setIsTyping(true);
-
-    const respuestaTexto = await api.enviarMensajeIA(opcion, rubro);
-    
-    const nuevoMsgBot = { id: Date.now() + 1, sender: 'bot', text: respuestaTexto };
-    setMensajes(prev => [...prev, nuevoMsgBot]);
-    setIsTyping(false);
   };
 
-  // --- LÓGICA DE RECARGA + BONIFICACIÓN DE TOKENS ---
-  const confirmarRecarga = () => {
-    const monto = Number(montoRecarga);
-    const bonusTokens = monto * RATIO_RECARGA; // Calculamos tokens ganados
-
-    // Actualizamos Saldo
-    setSaldo(prev => prev + monto);
-    
-    // Actualizamos Tokens (Gamificación)
-    setTokens(prev => prev + bonusTokens);
-
-    const nuevaTransaccion = {
-      id: Date.now(),
-      tipo: 'ingreso',
-      descripcion: 'Recarga Yape',
-      monto: monto,
-      fecha: 'Ahora mismo'
-    };
-    setMovimientos(prev => [nuevaTransaccion, ...prev]);
-    setShowYapeModal(false);
-    
-    // Mensaje de éxito enfocado en el beneficio
-    alert(`¡Éxito! Recargaste S/ ${monto} y ganaste ${bonusTokens} Créditos IA.`);
+  const reset = () => {
+    setStep(1); setSourceType(null); setInputValue(''); setDetails(''); setResult(null); onClose();
   };
 
   const styles = {
-    mainWrapper: { width: '100vw', minHeight: '100vh', backgroundColor: theme.colors.cream, display: 'flex', justifyContent: 'center', padding: '20px', boxSizing: 'border-box' },
-    contentContainer: { width: '100%', maxWidth: '1200px', display: 'flex', flexDirection: 'column', gap: '20px' },
-    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '15px', borderBottom: `2px solid rgba(227, 27, 35, 0.1)` },
-    grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '20px' },
+    overlay: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: '#fff', zIndex: 2000, padding: '20px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' },
+    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' },
+    title: { fontSize: '1.5rem', fontWeight: '900', color: theme.colors.dark, margin: 0 },
+    closeBtn: { background: 'none', border: 'none', fontSize: '2rem', color: '#666', cursor: 'pointer' },
     
-    // CHAT
-    chatContainer: { backgroundColor: theme.colors.white, borderRadius: '20px', padding: '20px', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', gridColumn: 'span 2', display: 'flex', flexDirection: 'column', height: '600px', position: 'relative' },
-    chatHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid #333', paddingBottom: '10px' },
-    tokenBadge: { backgroundColor: theme.colors.dark, color: '#FFD700', padding: '5px 10px', borderRadius: '12px', fontWeight: 'bold', fontSize: '0.9rem', border: '1px solid #FFD700' },
+    // Cards de selección
+    selectionGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '20px' },
+    selectionCard: { padding: '30px 10px', borderRadius: '15px', border: '2px solid #eee', backgroundColor: '#f9f9f9', textAlign: 'center', cursor: 'pointer', transition: 'all 0.2s' },
+    icon: { fontSize: '3rem', marginBottom: '10px', display: 'block' },
+    label: { fontWeight: 'bold', color: theme.colors.dark },
     
-    chatWindow: { flex: 1, overflowY: 'auto', marginBottom: '15px', paddingRight: '10px', display: 'flex', flexDirection: 'column', gap: '15px' },
-    bubbleBot: { alignSelf: 'flex-start', backgroundColor: '#F3F4F6', color: theme.colors.dark, padding: '15px', borderRadius: '15px 15px 15px 0', maxWidth: '80%', lineHeight: '1.5', whiteSpace: 'pre-wrap', border: '1px solid #ddd' },
-    bubbleUser: { alignSelf: 'flex-end', backgroundColor: theme.colors.red, color: 'white', padding: '12px 20px', borderRadius: '15px 15px 0 15px', maxWidth: '70%', fontWeight: '500' },
+    // Inputs
+    labelInput: { display: 'block', marginBottom: '10px', fontWeight: 'bold', color: theme.colors.dark },
+    textArea: { width: '100%', padding: '15px', borderRadius: '12px', border: '2px solid #eee', fontSize: '1rem', height: '120px', marginBottom: '20px', boxSizing: 'border-box', fontFamily: 'inherit' },
+    fileZone: { border: '2px dashed #ccc', borderRadius: '12px', padding: '30px', textAlign: 'center', color: '#888', marginBottom: '20px', cursor: 'pointer' },
     
-    // ESTADO "SIN TOKENS"
-    noTokensOverlay: { padding: '20px', backgroundColor: '#FFEBEB', border: `2px solid ${theme.colors.red}`, borderRadius: '10px', textAlign: 'center' },
-    noTokensTitle: { color: theme.colors.red, fontWeight: '900', fontSize: '1.1rem', marginBottom: '5px' },
-    noTokensText: { color: theme.colors.dark, fontSize: '0.9rem', marginBottom: '10px', fontWeight: 'bold' },
+    // Resultado
+    resultBox: { backgroundColor: '#F3F4F6', padding: '20px', borderRadius: '15px', borderLeft: `5px solid ${theme.colors.red}`, overflowY: 'auto', flex: 1, marginBottom: '20px', whiteSpace: 'pre-wrap' },
     
-    // BOTONES CHAT
-    optionsContainer: { display: 'flex', gap: '10px', flexWrap: 'wrap' },
-    optionButton: { flex: 1, padding: '12px', borderRadius: '10px', border: `2px solid ${theme.colors.red}`, backgroundColor: 'white', color: theme.colors.red, fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem', transition: 'all 0.2s', minWidth: '120px' },
-    
-    // WALLET
-    walletCard: { backgroundColor: theme.colors.white, borderRadius: '20px', padding: '30px', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', height: 'fit-content' },
-    transactionRow: { display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #333', fontSize: '0.9rem' },
-    cityBadge: { backgroundColor: theme.colors.dark, color: 'white', padding: '5px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', marginLeft: '10px', display: 'inline-block', verticalAlign: 'middle' },
-    
-    // MODAL YAPE
-    qrPlaceholder: { width: '150px', height: '150px', backgroundColor: '#ddd', margin: '20px auto', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px dashed #333', borderRadius: '10px', color: theme.colors.dark, fontWeight: '900' },
-    inputContainer: { display: 'flex', alignItems: 'center', border: '2px solid #333', borderRadius: '8px', marginBottom: '10px', overflow: 'hidden' },
-    currencySymbol: { backgroundColor: '#333', color: 'white', padding: '10px 15px', fontWeight: 'bold', fontSize: '1.2rem' },
-    inputMonto: { width: '100%', padding: '10px', fontSize: '1.2rem', border: 'none', outline: 'none', color: theme.colors.white, fontWeight: 'bold' },
-    btnConfirmar: { width: '100%', padding: '15px', backgroundColor: theme.colors.yape, color: 'white', border: 'none', borderRadius: '10px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer' },
-    bonusText: { textAlign: 'center', color: 'green', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '15px' },
-
-    logoutButton: { background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', color: theme.colors.red, fontWeight: 'bold', fontSize: '1rem' }
+    btnPrimary: { width: '100%', padding: '18px', backgroundColor: theme.colors.red, color: 'white', border: 'none', borderRadius: '12px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer', marginTop: 'auto' },
+    btnSecondary: { width: '100%', padding: '15px', background: 'transparent', color: '#666', border: 'none', cursor: 'pointer', marginTop: '10px' }
   };
 
   return (
-    <div style={styles.mainWrapper}>
-      <div style={styles.contentContainer}>
-        
-        <header style={styles.header}>
-          <div>
-            <div style={{display: 'flex', alignItems: 'center'}}>
-              <h2 style={{margin: 0, color: theme.colors.red, fontSize: '1.8rem'}}>{negocio}</h2>
-              <span style={styles.cityBadge}>📍 {ciudad}</span>
+    <div style={styles.overlay}>
+      <div style={styles.header}>
+        <h2 style={styles.title}>
+          {step === 1 && "Nuevo Contenido"}
+          {step === 2 && (sourceType === 'referencia' ? "Sube tu Referencia" : "Escribe tu Idea")}
+          {step === 3 && "Detalles del Negocio"}
+          {step === 4 && "¡Listo!"}
+        </h2>
+        <button onClick={reset} style={styles.closeBtn}>&times;</button>
+      </div>
+
+      {step === 1 && (
+        <div style={{flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
+          <p style={{textAlign: 'center', color: '#666', marginBottom: '30px'}}>¿En qué nos basamos hoy?</p>
+          <div style={styles.selectionGrid}>
+            <div style={styles.selectionCard} onClick={() => { setSourceType('referencia'); setStep(2); }}>
+              <span style={styles.icon}>🔗</span>
+              <span style={styles.label}>Referencia</span>
+              <p style={{fontSize: '0.8rem', color: '#888', marginTop: '5px'}}>Links, Videos, Fotos</p>
             </div>
-            <p style={{margin: '5px 0 0 0', color: theme.colors.dark, fontSize: '0.9rem'}}>Panel de Control • {rubro}</p>
-          </div>
-          <button onClick={onLogout} style={styles.logoutButton}>Salir</button>
-        </header>
-
-        <div style={styles.grid}>
-          
-          {/* SECCIÓN 1: CHAT IA CON SISTEMA DE TOKENS */}
-          <div style={styles.chatContainer}>
-            
-            {/* Cabecera del Chat con Contador */}
-            <div style={styles.chatHeader}>
-              <div style={{display: 'flex', alignItems: 'center'}}>
-                <div style={{width: '40px', height: '40px', borderRadius: '50%', backgroundColor: theme.colors.red, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', marginRight: '10px'}}>IA</div>
-                <div>
-                  <h3 style={{margin: 0, fontSize: '1.1rem', color: theme.colors.red}}>Asistente Milo</h3>
-                  <p style={{margin: 0, fontSize: '0.8rem', color: theme.colors.dark, fontWeight: 'bold'}}>● En línea</p>
-                </div>
-              </div>
-              {/* INDICADOR DE CRÉDITOS */}
-              <div style={styles.tokenBadge}>
-                ⚡ {tokens} Créditos
-              </div>
-            </div>
-
-            <div style={styles.chatWindow}>
-              {mensajes.map((msg) => (
-                <div key={msg.id} style={msg.sender === 'bot' ? styles.bubbleBot : styles.bubbleUser}>
-                  {msg.text}
-                </div>
-              ))}
-              {isTyping && <div style={{...styles.bubbleBot, fontStyle: 'italic'}}>Generando estrategia...</div>}
-              <div ref={chatEndRef} />
-            </div>
-
-            {/* ZONA DE ACCIONES: SE BLOQUEA SI NO HAY TOKENS */}
-            {tokens >= COSTO_POR_MENSAJE ? (
-              <div style={styles.optionsContainer}>
-                <button style={styles.optionButton} onClick={() => handleOpcionChat('Idea de Video')} disabled={isTyping}>🎥 Idea Video (-20)</button>
-                <button style={styles.optionButton} onClick={() => handleOpcionChat('Texto para Redes')} disabled={isTyping}>✍️ Copy (-20)</button>
-                <button style={styles.optionButton} onClick={() => handleOpcionChat('Tendencia')} disabled={isTyping}>📈 Tendencia (-20)</button>
-              </div>
-            ) : (
-              // MENSAJE DE BLOQUEO OSCURO Y CLARO
-              <div style={styles.noTokensOverlay}>
-                <div style={styles.noTokensTitle}>⚠️ CRÉDITOS AGOTADOS</div>
-                <div style={styles.noTokensText}>
-                  Necesitas recargar tu Ad-Wallet para seguir usando la IA.
-                </div>
-                <button 
-                  onClick={() => setShowYapeModal(true)}
-                  style={{...styles.btnConfirmar, padding: '10px', fontSize: '0.9rem'}}
-                >
-                  Recargar Ahora y Ganar Créditos
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* SECCIÓN 2: AD-WALLET */}
-          <div style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>
-            
-            <div style={styles.walletCard}>
-              <h3 style={{margin: 0, color: theme.colors.dark, fontSize: '1.1rem'}}>Saldo Disponible</h3>
-              <p style={{fontSize: '3rem', fontWeight: '800', margin: '10px 0', color: theme.colors.dark}}>
-                S/ {saldo.toFixed(2)}
-              </p>
-              <button 
-                onClick={() => setShowYapeModal(true)}
-                style={{width: '100%', padding: '15px', backgroundColor: theme.colors.yape, color: 'white', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'}}
-              >
-                <span>📲</span> Recargar con Yape
-              </button>
-            </div>
-
-            <div style={styles.walletCard}>
-              <h3 style={{margin: '0 0 15px 0', fontSize: '1.1rem', color: theme.colors.dark}}>Últimos Movimientos</h3>
-              {movimientos.slice(0, 3).map((mov) => (
-                <div key={mov.id} style={styles.transactionRow}>
-                  <div>
-                    <div style={{fontWeight: 'bold', color: theme.colors.dark}}>{mov.descripcion}</div>
-                    <div style={{fontSize: '0.8rem', color: theme.colors.dark}}>{mov.fecha}</div>
-                  </div>
-                  <div style={{fontWeight: 'bold', color: mov.tipo === 'ingreso' ? 'green' : theme.colors.red}}>
-                    {mov.tipo === 'ingreso' ? '+' : ''} S/ {Math.abs(mov.monto).toFixed(2)}
-                  </div>
-                </div>
-              ))}
-              <div 
-                onClick={() => setShowReportModal(true)}
-                style={{textAlign: 'center', marginTop: '15px', fontSize: '0.9rem', color: theme.colors.red, cursor: 'pointer', fontWeight: 'bold', textDecoration: 'underline'}}
-              >
-                Ver reporte completo
-              </div>
+            <div style={styles.selectionCard} onClick={() => { setSourceType('idea'); setStep(2); }}>
+              <span style={styles.icon}>💡</span>
+              <span style={styles.label}>Idea Propia</span>
+              <p style={{fontSize: '0.8rem', color: '#888', marginTop: '5px'}}>Texto, Borradores</p>
             </div>
           </div>
+        </div>
+      )}
 
+      {step === 2 && (
+        <div style={{flex: 1}}>
+          {sourceType === 'referencia' ? (
+            <>
+              <div style={styles.fileZone} onClick={() => alert('Simulación: Archivo subido')}>
+                📂 Toca para subir imagen/video
+              </div>
+              <label style={styles.labelInput}>O pega un link (Instagram/TikTok):</label>
+              <input 
+                type="text" 
+                placeholder="https://..." 
+                style={{...styles.textArea, height: '50px'}} 
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+              />
+            </>
+          ) : (
+            <>
+              <label style={styles.labelInput}>Describe tu idea:</label>
+              <textarea 
+                placeholder="Ej: Quiero hablar sobre mis ofertas de fin de año..." 
+                style={styles.textArea}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+              />
+            </>
+          )}
+          <button style={styles.btnPrimary} onClick={handleNext}>Siguiente</button>
+        </div>
+      )}
+
+      {step === 3 && (
+        <div style={{flex: 1, display: 'flex', flexDirection: 'column'}}>
+          <p style={{color: '#666', marginBottom: '20px'}}>
+            Para que la IA adapte el contenido, dinos qué producto o servicio quieres destacar.
+          </p>
+          <label style={styles.labelInput}>Detalles clave:</label>
+          <textarea 
+            placeholder="Ej: Zapatillas Urbanas Modelo X, color rojo, precio S/150..." 
+            style={styles.textArea}
+            value={details}
+            onChange={(e) => setDetails(e.target.value)}
+          />
+          <button style={styles.btnPrimary} onClick={handleNext}>
+            {loading ? 'Generando...' : 'Crear Contenido'}
+          </button>
+        </div>
+      )}
+
+      {step === 4 && result && (
+        <div style={{flex: 1, display: 'flex', flexDirection: 'column'}}>
+          <h3 style={{color: theme.colors.red, marginTop: 0}}>{result.tipo}</h3>
+          <div style={styles.resultBox}>
+            {result.contenido}
+          </div>
+          <button style={styles.btnPrimary} onClick={() => { alert('Guardado en Borradores'); reset(); }}>
+            Usar este Guion
+          </button>
+          <button style={styles.btnSecondary} onClick={() => setStep(2)}>
+            Intentar de nuevo
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// --- DASHBOARD PRINCIPAL ---
+const Dashboard = ({ onLogout, userData, initialGoal }) => {
+  const [salesGoal, setSalesGoal] = useState(initialGoal || '0');
+  const [showBrainstorm, setShowBrainstorm] = useState(false);
+  const [showCreate, setShowCreate] = useState(false); // NUEVO ESTADO
+  const [hasNewTrends, setHasNewTrends] = useState(true);
+  const [isEditingGoal, setIsEditingGoal] = useState(false);
+  const [tempGoal, setTempGoal] = useState(salesGoal);
+
+  const handleGoalUpdate = () => {
+    setSalesGoal(tempGoal);
+    setIsEditingGoal(false);
+  };
+
+  const styles = {
+    wrapper: { position: 'relative', width: '100%', height: '100%', backgroundColor: '#fff', display: 'flex', flexDirection: 'column', padding: '20px', boxSizing: 'border-box' },
+    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' },
+    welcome: { fontSize: '1.5rem', fontWeight: '900', color: theme.colors.dark, margin: 0 },
+    subWelcome: { fontSize: '0.9rem', color: '#666', margin: 0 },
+    
+    goalContainer: { backgroundColor: theme.colors.cream, padding: '10px 15px', borderRadius: '12px', textAlign: 'right', cursor: 'pointer', border: '1px solid #eee' },
+    goalLabel: { fontSize: '0.7rem', color: theme.colors.red, fontWeight: 'bold', textTransform: 'uppercase' },
+    goalAmount: { fontSize: '1.2rem', fontWeight: '900', color: theme.colors.dark },
+    
+    mainActionContainer: { 
+      display: 'flex', 
+      flexDirection: 'column', // Apilar botones
+      alignItems: 'center', 
+      justifyContent: 'center',
+      marginTop: '10px',
+      gap: '25px', // Espacio entre botones
+      flex: 1 // Ocupar espacio central disponible
+    },
+    
+    // BOTÓN 1: LLUVIA DE IDEAS (Grande)
+    brainstormBtn: { 
+      width: '180px', height: '180px', borderRadius: '50%', backgroundColor: theme.colors.red, 
+      color: 'white', border: 'none', boxShadow: '0 20px 40px rgba(227, 27, 35, 0.3)',
+      display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+      cursor: 'pointer', position: 'relative', transition: 'transform 0.2s', zIndex: 10
+    },
+    btnIcon: { fontSize: '2.5rem', marginBottom: '5px' },
+    btnText: { fontSize: '1.1rem', fontWeight: 'bold' },
+    notification: { position: 'absolute', top: '15px', right: '15px', width: '25px', height: '25px', backgroundColor: '#FFD700', borderRadius: '50%', border: '3px solid white', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '0.8rem', fontWeight: 'bold', color: theme.colors.dark },
+
+    // BOTÓN 2: CREAR CONTENIDO (Más rectangular/ancho)
+    createBtn: {
+      width: '80%',
+      padding: '15px 20px',
+      backgroundColor: theme.colors.dark,
+      color: 'white',
+      borderRadius: '15px',
+      border: 'none',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '10px',
+      fontSize: '1rem',
+      fontWeight: 'bold',
+      cursor: 'pointer',
+      boxShadow: '0 10px 20px rgba(0,0,0,0.1)'
+    },
+
+    editOverlay: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(255,255,255,0.98)', zIndex: 100, display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', borderRadius: '0' },
+    editInput: { fontSize: '2rem', border: 'none', borderBottom: '2px solid red', textAlign: 'center', marginBottom: '20px', width: '200px', outline: 'none', backgroundColor: 'transparent' }
+  };
+
+  return (
+    <div style={styles.wrapper}>
+      
+      <div style={styles.header}>
+        <div>
+          <h1 style={styles.welcome}>Hola, {userData?.nombreNegocio || 'Empresario'}</h1>
+          <p style={styles.subWelcome}>{userData?.rubro || 'General'}</p>
+        </div>
+        <div style={styles.goalContainer} onClick={() => { setTempGoal(salesGoal); setIsEditingGoal(true); }}>
+          <div style={styles.goalLabel}>Meta Mensual</div>
+          <div style={styles.goalAmount}>S/ {salesGoal} ✏️</div>
         </div>
       </div>
 
-      {/* --- MODAL DE YAPE/PLIN --- */}
-      <Modal isOpen={showYapeModal} onClose={() => setShowYapeModal(false)} title="Recarga Rápida">
-        <p style={{textAlign: 'center', color: theme.colors.dark, fontWeight: 'bold'}}>
-          Escanea el QR o yapea al <strong>999-000-123</strong>
-        </p>
-        <div style={styles.qrPlaceholder}>[ CÓDIGO QR ]</div>
-        
-        <label style={{display: 'block', marginBottom: '8px', fontWeight: 'bold', color: theme.colors.dark}}>
-          Monto a recargar:
-        </label>
-        
-        <div style={styles.inputContainer}>
-          <div style={styles.currencySymbol}>S/.</div>
-          <input 
-            type="number" 
-            value={montoRecarga} 
-            onChange={(e) => setMontoRecarga(e.target.value)}
-            style={styles.inputMonto}
-          />
-        </div>
-
-        {/* MENSAJE DE INCENTIVO */}
-        <div style={styles.bonusText}>
-          🎁 Bono: Recibirás {Number(montoRecarga) * RATIO_RECARGA} Créditos IA extra
-        </div>
-        
-        <button style={styles.btnConfirmar} onClick={confirmarRecarga}>
-          Confirmar "Ya Yapeé"
+      <div style={styles.mainActionContainer}>
+        {/* BOTÓN 1 */}
+        <button 
+          style={styles.brainstormBtn} 
+          onClick={() => { setShowBrainstorm(true); setHasNewTrends(false); }}
+        >
+          {hasNewTrends && <div style={styles.notification}>!</div>}
+          <div style={styles.btnIcon}>🧠</div>
+          <div style={styles.btnText}>Lluvia de<br/>Ideas</div>
         </button>
-      </Modal>
 
-      {/* --- MODAL DE REPORTE --- */}
-      <Modal isOpen={showReportModal} onClose={() => setShowReportModal(false)} title="Reporte Financiero">
-        <div style={{maxHeight: '300px', overflowY: 'auto'}}>
-          <table style={{width: '100%', borderCollapse: 'collapse'}}>
-            <thead>
-              <tr style={{textAlign: 'left', borderBottom: '2px solid #333'}}>
-                <th style={{padding: '10px', color: theme.colors.dark}}>Fecha</th>
-                <th style={{padding: '10px', color: theme.colors.dark}}>Concepto</th>
-                <th style={{padding: '10px', color: theme.colors.dark}}>Monto</th>
-              </tr>
-            </thead>
-            <tbody>
-              {movimientos.map((mov) => (
-                <tr key={mov.id} style={{borderBottom: '1px solid #ccc'}}>
-                  <td style={{padding: '10px', fontSize: '0.9rem', color: theme.colors.dark}}>{mov.fecha}</td>
-                  <td style={{padding: '10px', fontSize: '0.9rem', color: theme.colors.dark}}>{mov.descripcion}</td>
-                  <td style={{padding: '10px', fontWeight: 'bold', color: mov.tipo === 'ingreso' ? 'green' : theme.colors.red}}>
-                    {mov.tipo === 'ingreso' ? '+' : ''} {Math.abs(mov.monto).toFixed(2)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <button style={{marginTop: '20px', width: '100%', padding: '12px', backgroundColor: theme.colors.dark, color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold'}}>
-            Descargar PDF (Simulado)
-          </button>
+        {/* BOTÓN 2 - NUEVO */}
+        <button 
+          style={styles.createBtn}
+          onClick={() => setShowCreate(true)}
+        >
+          <span style={{fontSize: '1.5rem'}}>✨</span>
+          Crear Contenido Nuevo
+        </button>
+      </div>
+
+      <div style={{textAlign: 'center', paddingBottom: '20px'}}>
+        <button onClick={onLogout} style={{background: 'none', border: 'none', color: '#999', textDecoration: 'underline', cursor: 'pointer'}}>Cerrar Sesión</button>
+      </div>
+
+      {/* MODALES */}
+      {isEditingGoal && (
+        <div style={styles.editOverlay}>
+          <h3>Editar Meta</h3>
+          <input type="number" value={tempGoal} onChange={(e) => setTempGoal(e.target.value)} style={styles.editInput} autoFocus />
+          <button onClick={handleGoalUpdate} style={{padding: '10px 30px', background: theme.colors.red, color: 'white', border: 'none', borderRadius: '10px', fontSize: '1rem', cursor: 'pointer'}}>Guardar</button>
         </div>
-      </Modal>
+      )}
 
+      <BrainstormModal isOpen={showBrainstorm} onClose={() => setShowBrainstorm(false)} rubro={userData?.rubro} />
+      
+      {/* NUEVO MODAL CONECTADO */}
+      <CreateContentModal isOpen={showCreate} onClose={() => setShowCreate(false)} />
     </div>
   );
 };

@@ -2,102 +2,128 @@ import React from 'react';
 import { theme } from '../styles/theme';
 import miloLogo from '../assets/milo-brand.png';
 
-const Welcome = ({ onEnter }) => {
+const Welcome = ({ onEnter, onLogin }) => {
   const styles = {
+    // CONTENEDOR PRINCIPAL
     wrapper: {
       display: 'flex',
-      flexDirection: 'row', // Fuerza la fila: Texto Izq | Imagen Der
-      flexWrap: 'wrap',     // Permite caer en móviles, pero en PC se mantiene al lado
-      width: '100vw',
-      minHeight: '100vh',
-      backgroundColor: theme.colors.white,
-      margin: 0,
-      padding: 0,
-      overflowX: 'hidden'
-    },
-    // SECCIÓN IZQUIERDA: Contenido (Texto y Botón)
-    contentSide: {
-      flex: '1 1 300px', // Base de 500px. Si hay espacio, ocupa la mitad.
-      display: 'flex',
       flexDirection: 'column',
-      justifyContent: 'center',
-      padding: '5% 8%', // Espaciado interno cómodo
-      backgroundColor: theme.colors.white,
-      zIndex: 1
+      width: '100%',
+      height: '100%', // Ocupa todo el alto del "teléfono"
+      backgroundColor: theme.colors.cream, // Fondo base crema para evitar huecos blancos
+      overflow: 'hidden'
     },
-    // SECCIÓN DERECHA: Imagen
-    imageSide: {
-      flex: '1 1 500px', // Base de 500px. Si hay espacio, ocupa la otra mitad.
+    
+    // ZONA SUPERIOR (IMAGEN)
+    imageSection: {
+      flex: '0 0 45%', // Ocupa el 45% superior de la pantalla
+      width: '100%',
       backgroundColor: theme.colors.cream,
       display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '50vh', // Altura mínima para que no desaparezca
-      position: 'relative'
+      alignItems: 'center', // Centrado Vertical
+      justifyContent: 'center', // Centrado Horizontal
+      paddingTop: '20px' // Compensación visual por el notch
     },
+    
+    // EL LOGO (Ahora es una etiqueta img para mejor control)
     logo: {
-      width: '80%',
-      maxWidth: '600px',
+      width: '70%', // Tamaño controlado
+      maxWidth: '280px',
       height: 'auto',
       objectFit: 'contain'
     },
+
+    // ZONA INFERIOR (TEXTO)
+    textSection: {
+      flex: '1', // Ocupa el resto del espacio
+      backgroundColor: theme.colors.white,
+      borderTopLeftRadius: '30px', // Efecto de tarjeta moderna
+      borderTopRightRadius: '30px',
+      padding: '40px 30px',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center', // Centra el texto verticalmente en su zona
+      alignItems: 'center',
+      boxShadow: '0 -10px 30px rgba(0,0,0,0.05)', // Sombra sutil hacia arriba
+      position: 'relative' // Para asegurar que esté encima
+    },
+
     title: {
-      fontSize: 'clamp(3rem, 5vw, 4.5rem)',
+      fontSize: '2.5rem',
       color: theme.colors.red,
       fontWeight: '900',
-      marginBottom: '20px',
+      marginBottom: '15px',
+      textAlign: 'center',
       lineHeight: '1.1'
     },
+    
     description: {
-      fontSize: '1.25rem',
+      fontSize: '1rem',
       color: theme.colors.dark,
-      marginBottom: '40px',
+      marginBottom: '30px',
       lineHeight: '1.6',
-      maxWidth: '600px' // Evita que el texto se estire demasiado
+      textAlign: 'center'
     },
-    button: {
+    
+    primaryButton: {
       backgroundColor: theme.colors.red,
       color: theme.colors.white,
-      padding: '20px 40px',
-      borderRadius: '12px',
+      padding: '18px',
+      borderRadius: '15px',
       border: 'none',
       fontWeight: 'bold',
-      cursor: 'pointer',
       fontSize: '1.1rem',
-      width: 'fit-content',
-      boxShadow: '0 4px 6px rgba(227, 27, 35, 0.3)',
-      transition: 'transform 0.2s ease'
+      width: '100%',
+      cursor: 'pointer',
+      marginBottom: '15px',
+      boxShadow: '0 4px 10px rgba(227, 27, 35, 0.3)'
+    },
+    
+    secondaryButton: {
+      backgroundColor: 'transparent',
+      color: theme.colors.red,
+      border: `2px solid ${theme.colors.red}`,
+      padding: '16px',
+      borderRadius: '15px',
+      fontWeight: 'bold',
+      fontSize: '1rem',
+      width: '100%',
+      cursor: 'pointer'
     }
   };
 
   return (
     <div style={styles.wrapper}>
-      {/* 1. PRIMERO EN EL CÓDIGO = IZQUIERDA EN PANTALLA */}
-      <div style={styles.contentSide}>
+      
+      {/* 1. SECCIÓN DE IMAGEN (ARRIBA) */}
+      <div style={styles.imageSection}>
+        <img src={miloLogo} alt="Logo Team Milo" style={styles.logo} />
+      </div>
+
+      {/* 2. SECCIÓN DE CONTENIDO (ABAJO) */}
+      <div style={styles.textSection}>
         <h1 style={styles.title}>Team Milo</h1>
         
-        {/* Texto limpio sin [cite] */}
-        <div style={styles.description}>
-          <p>
-            <strong>GenioContent</strong>: Aplicación móvil con IA que automatiza la creación de contenido y el cierre de ventas. 
-            Nuestra tecnología actúa como un "Director de Marketing de Bolsillo" para evitar la invisibilidad digital.
-          </p>
-        </div>
+        <p style={styles.description}>
+          <strong>GenioContent</strong>: Tu Director de Marketing de bolsillo. 
+          Automatiza tu contenido y cierra ventas reales con IA proactiva.
+        </p>
 
         <button 
+          style={styles.primaryButton}
           onClick={onEnter}
-          style={styles.button}
-          onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
-          onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+        >
+          Registrar mi Negocio
+        </button>
+        
+        <button 
+          style={styles.secondaryButton}
+          onClick={onLogin}
         >
           Ingresar a la Demo
         </button>
       </div>
 
-      {/* 2. SEGUNDO EN EL CÓDIGO = DERECHA EN PANTALLA */}
-      <div style={styles.imageSide}>
-        <img src={miloLogo} alt="Logo Team Milo" style={styles.logo} />
-      </div>
     </div>
   );
 };
