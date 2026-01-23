@@ -99,24 +99,19 @@ export const api = {
     return respuestaBase;
   },
 
-  // NUEVO: Generador de Contenido
-  generarContenido: async (tipoOrigen, datosInput, detallesNegocio) => {
-    // Simulamos tiempo de "pensado"
+  generarContenido: async (tipoOrigen, objetivo, datosInput, detallesNegocio) => {
     await new Promise(r => setTimeout(r, 2000));
+    
+    // Personalizamos la respuesta según el objetivo
+    let intro = "";
+    if (objetivo === 'viral') intro = "🚀 **Estrategia Viral:** Usaremos un audio en tendencia y cortes rápidos.";
+    if (objetivo === 'venta') intro = "💰 **Estrategia de Venta:** Nos enfocaremos en la escasez y el llamado a la acción directo.";
+    if (objetivo === 'valor') intro = "🎓 **Estrategia de Valor:** Educaremos al cliente para generar confianza.";
 
-    if (tipoOrigen === 'referencia') {
-      return {
-        tipo: 'Guion de Reel (Basado en Referencia)',
-        titulo: 'Adaptación de Tendencia',
-        contenido: `🎥 **Estructura Sugerida:**\n\n1. **Visual (0-3s):** ${detallesNegocio} (Tu producto) entrando en escena igual que en el video de referencia.\n2. **Audio:** Usar el mismo audio del link enviado.\n3. **Texto en pantalla:** "Cuando pruebas ${detallesNegocio} por primera vez..."\n4. **Cierre:** Muestra tu logo y una flecha al link de la bio.\n\n💡 **Tip:** Imita la iluminación del video original.`
-      };
-    } else {
-      return {
-        tipo: 'Post / Copy (Basado en Idea)',
-        titulo: 'Desarrollo de tu Idea',
-        contenido: `✍️ **Copy Propuesto:**\n\n"${datosInput}..."\n\nEs lo que muchos piensan, pero aquí en **${detallesNegocio}** lo hacemos realidad. ✨\n\n✅ Calidad garantizada.\n✅ Envíos a todo el país.\n\n👇 Cuéntanos si estás de acuerdo en los comentarios.\n#Emprendimiento #Cusco`
-      };
-    }
+    return {
+      tipo: tipoOrigen === 'referencia' ? 'Guion Adaptado' : 'Copy Creativo',
+      contenido: `${intro}\n\n**Propuesta para ${detallesNegocio}:**\n\n1. **Gancho Visual:** ${datosInput.substring(0, 20)}...\n2. **Desarrollo:** Muestra el producto en uso real.\n3. **Cierre:** "Comenta YO para info".\n\n💡 **Tip Pro:** Usa buena iluminación.`
+    };
   },
 
   registrarUsuario: async (datos) => ({ success: true }),
@@ -157,5 +152,14 @@ export const api = {
       { id: 3, title: 'Challenge: Fast', views: '2.5M', url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4' }
     ];
     return videos;
+  },
+
+  obtenerChats: async () => {
+    return [
+      { id: 1, nombre: 'Carlos Gomez', mensaje: 'Hola, vi el reel del postre. ¿Hacen delivery?', hora: '10:45', noLeidos: 2, avatar: '👤' },
+      { id: 2, nombre: 'Maria L.', mensaje: 'Me interesa el vestido rojo, precio?', hora: '09:30', noLeidos: 1, avatar: '👩' },
+      { id: 3, nombre: 'Juan Perez', mensaje: 'Gracias, ya recibí mi pedido.', hora: 'Ayer', noLeidos: 0, avatar: '👨' },
+      { id: 4, nombre: 'Luisa M.', mensaje: '¿Tienen talla M disponible?', hora: 'Ayer', noLeidos: 0, avatar: '👩' }
+    ];
   }
 };
